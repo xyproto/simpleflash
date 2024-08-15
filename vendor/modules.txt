@@ -42,7 +42,7 @@ cloud.google.com/go/longrunning/autogen/longrunningpb
 cloud.google.com/go/vertexai/genai
 cloud.google.com/go/vertexai/internal
 cloud.google.com/go/vertexai/internal/support
-# github.com/allegro/bigcache/v3 v3.1.0
+# github.com/allegro/bigcache/v3 v3.1.1-0.20240514165432-a2f05d7cbfdc
 ## explicit; go 1.16
 github.com/allegro/bigcache/v3
 github.com/allegro/bigcache/v3/queue

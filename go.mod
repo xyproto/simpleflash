@@ -4,7 +4,7 @@ go 1.22.6
 
 require (
 	cloud.google.com/go/vertexai v0.12.0
-	github.com/allegro/bigcache/v3 v3.1.0
+	github.com/allegro/bigcache/v3 v3.1.1-0.20240514165432-a2f05d7cbfdc
 	github.com/xyproto/env v1.9.1
 	github.com/xyproto/env/v2 v2.3.0
 	github.com/xyproto/multimodal v1.3.1
