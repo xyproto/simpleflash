@@ -26,37 +26,48 @@ func TestMain(m *testing.M) {
 }
 
 func TestNewSimpleFlash(t *testing.T) {
-	sf := New(testModelName, testMultiModalModelName, testLocation, env.Str("PROJECT_ID"), false)
-
-	if sf.modelName != testModelName {
-		t.Errorf("expected modelName to be '%s', got '%s'", testModelName, sf.modelName)
+	sf, err := New(testModelName, testMultiModalModelName, testLocation, env.Str("PROJECT_ID"), false)
+	if err != nil {
+		t.Errorf("could not create a new SimpleFlash: %v", err)
 	}
 
-	if sf.multiModalModelName != testMultiModalModelName {
-		t.Errorf("expected multiModalModelName to be '%s', got '%s'", testMultiModalModelName, sf.multiModalModelName)
+	if sf.ModelName != testModelName {
+		t.Errorf("expected modelName to be '%s', got '%s'", testModelName, sf.ModelName)
 	}
 
-	if sf.projectLocation != testLocation {
-		t.Errorf("expected projectLocation to be '%s', got '%s'", testLocation, sf.projectLocation)
+	if sf.MultiModalModelName != testMultiModalModelName {
+		t.Errorf("expected multiModalModelName to be '%s', got '%s'", testMultiModalModelName, sf.MultiModalModelName)
 	}
 
-	if sf.projectID != env.Str("PROJECT_ID") {
-		t.Errorf("expected projectID to be '%s', got '%s'", env.Str("PROJECT_ID"), sf.projectID)
+	if sf.ProjectLocation != testLocation {
+		t.Errorf("expected projectLocation to be '%s', got '%s'", testLocation, sf.ProjectLocation)
+	}
+
+	if sf.ProjectID != env.Str("PROJECT_ID") {
+		t.Errorf("expected projectID to be '%s', got '%s'", env.Str("PROJECT_ID"), sf.ProjectID)
 	}
 }
 
 func TestSetTimeout(t *testing.T) {
-	sf := New(testModelName, testMultiModalModelName, testLocation, env.Str("PROJECT_ID"), false)
-	sf.SetTimeout(10 * time.Second)
+	sf, err := New(testModelName, testMultiModalModelName, testLocation, env.Str("PROJECT_ID"), false)
+	if err != nil {
+		t.Errorf("could not create a new SimpleFlash: %v", err)
+	}
 
-	if sf.timeout != 10*time.Second {
-		t.Errorf("expected timeout to be 10s, got %v", sf.timeout)
+	sf.Timeout = 10 * time.Second
+
+	if sf.Timeout != 10*time.Second {
+		t.Errorf("expected timeout to be 10s, got %v", sf.Timeout)
 	}
 }
 
 func TestQueryGemini(t *testing.T) {
-	sf := New(testModelName, testMultiModalModelName, testLocation, env.Str("PROJECT_ID"), true)
-	sf.SetTimeout(10 * time.Second)
+	sf, err := New(testModelName, testMultiModalModelName, testLocation, env.Str("PROJECT_ID"), true)
+	if err != nil {
+		t.Errorf("could not create a new SimpleFlash: %v", err)
+	}
+
+	sf.Timeout = 10 * time.Second
 
 	// This is a placeholder test. In a real scenario, you would mock the VertexAI client and the response.
 	result, err := sf.QueryGemini("Test prompt", nil, nil, nil)
@@ -70,8 +81,12 @@ func TestQueryGemini(t *testing.T) {
 }
 
 func TestCountTextTokens(t *testing.T) {
-	sf := New(testModelName, testMultiModalModelName, testLocation, env.Str("PROJECT_ID"), false)
-	sf.SetTimeout(10 * time.Second)
+	sf, err := New(testModelName, testMultiModalModelName, testLocation, env.Str("PROJECT_ID"), false)
+	if err != nil {
+		t.Errorf("could not create a new SimpleFlash: %v", err)
+	}
+
+	sf.Timeout = 10 * time.Second
 
 	// This is a placeholder test. In a real scenario, you would mock the VertexAI client and the response.
 	tokenCount, err := sf.CountTextTokens("Test prompt")
