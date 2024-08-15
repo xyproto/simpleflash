@@ -16,7 +16,7 @@ const (
 )
 
 func TestMain(m *testing.M) {
-	if !env.Has("PROJECT_ID") {
+	if env.No("PROJECT_ID") {
 		fmt.Fprintln(os.Stderr, "PROJECT_ID environment variable is not set. Skipping tests.")
 		os.Exit(0)
 	}
