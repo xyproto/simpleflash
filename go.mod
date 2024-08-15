@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/vertexai v0.12.0
 	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/xyproto/env v1.9.1
-	github.com/xyproto/env/v2 v2.2.5
+	github.com/xyproto/env/v2 v2.3.0
 	github.com/xyproto/multimodal v1.3.1
 	golang.org/x/oauth2 v0.22.0
 	google.golang.org/api v0.192.0
