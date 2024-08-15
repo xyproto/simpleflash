@@ -24,13 +24,15 @@ func init() {
 }
 
 const (
-	projectLocation = env.Str("PROJECT_LOCATION", "europe-west4")
-	projectID       = env.Str("PROJECT_ID", "44444444444")
-	temperature     = 0.0
-	textModelName   = "gemini-1.5-flash-001"
+	temperature         = 0.0
+	textModelName       = "gemini-1.5-flash-001"
+	multiModalModelName = "gemini-1.0-pro-vision" // TODO: update
 )
 
 var (
+	projectLocation = env.Str("PROJECT_LOCATION", "europe-west4")
+	projectID       = env.Str("PROJECT_ID", "44444444444")
+
 	timeout = 3 * time.Minute
 	verbose = env.Bool("VERBOSE")
 
@@ -44,7 +46,7 @@ var (
 			log.Fatalf("Failed to obtain default credentials: %v", err)
 		}
 		// Create a genai.Client using the credentials
-		genaiClient, err := genai.NewClient(ctx, projectID, location, option.WithCredentials(creds))
+		genaiClient, err := genai.NewClient(ctx, projectID, projectLocation, option.WithCredentials(creds))
 		if err != nil {
 			log.Fatalf("failed to create genai client: %v", err)
 		}
