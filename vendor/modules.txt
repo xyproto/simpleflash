@@ -96,6 +96,9 @@ github.com/googleapis/gax-go/v2/internal
 # github.com/xyproto/env v1.9.1
 ## explicit; go 1.15
 github.com/xyproto/env
+# github.com/xyproto/env/v2 v2.2.5
+## explicit; go 1.19
+github.com/xyproto/env/v2
 # github.com/xyproto/multimodal v1.3.1
 ## explicit; go 1.22.3
 github.com/xyproto/multimodal
