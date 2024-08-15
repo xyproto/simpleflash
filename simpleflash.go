@@ -17,49 +17,55 @@ import (
 	"google.golang.org/api/option"
 )
 
-func init() {
-	go func() {
-		InitTranslationCache()
-	}()
+type SimpleFlash struct {
+	modelName           string
+	multiModalModelName string
+	projectLocation     string
+	projectID           string
+	client              *genai.Client
+	cache               *bigcache.BigCache
+	timeout             time.Duration
 }
 
-const (
-	temperature         = 0.0
-	textModelName       = "gemini-1.5-flash-001"
-	multiModalModelName = "gemini-1.0-pro-vision" // TODO: update
-)
+func New(modelName, multiModalModelName, projectLocation, projectID string, cache bool) *SimpleFlash {
+	sf := &SimpleFlash{
+		modelName:           env.Str("MODEL_NAME", modelName),
+		multiModalModelName: env.Str("MULTI_MODAL_MODEL_NAME", multiModalModelName),
+		projectLocation:     env.Str("PROJECT_LOCATION", projectLocation),
+		projectID:           env.Str("PROJECT_ID", projectID),
+		timeout:             3 * time.Minute,
+	}
 
-var (
-	projectLocation = env.Str("PROJECT_LOCATION", "europe-west4")
-	projectID       = env.Str("PROJECT_ID", "44444444444")
+	// Initialize the genai client
+	ctx := context.Background()
+	creds, err := google.FindDefaultCredentials(ctx, "https://www.googleapis.com/auth/cloud-platform")
+	if err != nil {
+		log.Fatalf("Failed to obtain default credentials: %v", err)
+	}
+	genaiClient, err := genai.NewClient(ctx, sf.projectID, sf.projectLocation, option.WithCredentials(creds))
+	if err != nil {
+		log.Fatalf("failed to create genai client: %v", err)
+	}
+	sf.client = genaiClient
 
-	timeout = 3 * time.Minute
-	verbose = env.Bool("VERBOSE")
-
-	queryCache *bigcache.BigCache = nil
-
-	// Create credentials using Google's default credentials
-	genaiClient = func() *genai.Client {
-		ctx := context.Background()
-		creds, err := google.FindDefaultCredentials(ctx, "https://www.googleapis.com/auth/cloud-platform")
+	// Initialize cache if the cache parameter is true
+	if cache {
+		err := sf.initCache()
 		if err != nil {
-			log.Fatalf("Failed to obtain default credentials: %v", err)
+			log.Fatalf("Failed to initialize cache: %v", err)
 		}
-		// Create a genai.Client using the credentials
-		genaiClient, err := genai.NewClient(ctx, projectID, projectLocation, option.WithCredentials(creds))
-		if err != nil {
-			log.Fatalf("failed to create genai client: %v", err)
-		}
-		return genaiClient
-	}()
-)
+	}
 
-func SetTimeout(timeout time.Duration) {
-	timeout = timeout
+	return sf
 }
 
-// InitTranslationCache initializes the BigCache cache
-func InitTranslationCache() error {
+// SetTimeout sets the timeout for requests
+func (sf *SimpleFlash) SetTimeout(t time.Duration) {
+	sf.timeout = t
+}
+
+// initCache initializes the BigCache cache
+func (sf *SimpleFlash) initCache() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -71,17 +77,13 @@ func InitTranslationCache() error {
 	if err != nil {
 		return err
 	}
-	queryCache = c
+	sf.cache = c
 	return nil
 }
 
 // QueryGemini processes a prompt with optional temperature, base64-encoded data, and MIME type for the data.
-// The temperature, base64data, and dataMimeType are optional. The function is generic to handle any type of data.
-func QueryGemini(prompt string, temperature *float64, base64Data, dataMimeType, customModelName *string) (string, error) {
-	modelName := textModelName
-	if customModelName != nil {
-		modelName = *customModelName
-	}
+func (sf *SimpleFlash) QueryGemini(prompt string, temperature *float64, base64Data, dataMimeType *string) (string, error) {
+	modelName := sf.modelName
 
 	// Generate a unique cache key based on prompt and optionally on temperature, base64Data, and dataMimeType
 	cacheKeyComponents := prompt
@@ -90,29 +92,23 @@ func QueryGemini(prompt string, temperature *float64, base64Data, dataMimeType, 
 	}
 	if base64Data != nil {
 		cacheKeyComponents += *base64Data
-		modelName = multiModalModelName
-		if customModelName != nil {
-			modelName = *customModelName
-		}
+		modelName = sf.multiModalModelName
 	}
 	if dataMimeType != nil {
 		cacheKeyComponents += *dataMimeType
 	}
-	if customModelName != nil {
-		cacheKeyComponents += *customModelName
-	}
 	cacheKey := fmt.Sprintf("%x", sha256.Sum256([]byte(cacheKeyComponents)))
 
 	// Check cache for existing entry
-	if queryCache != nil {
-		if entry, err := queryCache.Get(cacheKey); err == nil {
+	if sf.cache != nil {
+		if entry, err := sf.cache.Get(cacheKey); err == nil {
 			return string(entry), nil
 		}
 	}
 
 	// Initialize the multimodal instance, using the provided temperature if available
 	mm := multimodal.New(modelName, 0.0) // Default temperature
-	mm.SetTimeout(timeout)
+	mm.SetTimeout(sf.timeout)
 	if temperature != nil {
 		mm = multimodal.New(modelName, float32(*temperature))
 	}
@@ -127,11 +123,11 @@ func QueryGemini(prompt string, temperature *float64, base64Data, dataMimeType, 
 		mm.AddData(*dataMimeType, data)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), sf.timeout)
 	defer cancel()
 
 	// Submit the multimodal query and process the result
-	result, err := mm.SubmitToClient(ctx, genaiClient)
+	result, err := mm.SubmitToClient(ctx, sf.client)
 	if err != nil {
 		return "", fmt.Errorf("failed to process response: %v", err)
 	}
@@ -139,24 +135,21 @@ func QueryGemini(prompt string, temperature *float64, base64Data, dataMimeType, 
 	result = strings.TrimSpace(result)
 
 	// Store the new result in the cache
-	if queryCache != nil {
-		_ = queryCache.Set(cacheKey, []byte(result))
+	if sf.cache != nil {
+		_ = sf.cache.Set(cacheKey, []byte(result))
 	}
 
 	return result, nil
 }
 
 // CountTextTokens tries to count the number of tokens in the given prompt, using the VertexAI API
-func CountTextTokens(prompt string, customModelName *string) (int, error) {
-	modelName := textModelName
-	if customModelName != nil {
-		modelName = *customModelName
-	}
+func (sf *SimpleFlash) CountTextTokens(prompt string) (int, error) {
+	modelName := sf.modelName
 	mm := multimodal.New(modelName, 0.0)
-	mm.SetTimeout(timeout)
+	mm.SetTimeout(sf.timeout)
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), sf.timeout)
 	defer cancel()
 
-	return mm.CountTextTokensWithClient(ctx, genaiClient, prompt)
+	return mm.CountTextTokensWithClient(ctx, sf.client, prompt)
 }
