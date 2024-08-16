@@ -58,7 +58,7 @@ Building and running the example (in `cmd/simple`):
 ```sh
 cd cmd/simple
 
-# Use your own Google Cloud Project ID here, and also log in with `gcloud auth application-default login`:
+# Use your own Google Cloud Project ID here, and also log in with `gcloud auth application-default login` **or** deploy and run it within Google Cloud:
 export PROJECT_ID=44444444444
 
 # Build the executable
