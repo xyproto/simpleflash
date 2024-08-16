@@ -73,6 +73,5 @@ Grazing in the field.
 
 ### General info
 
-* Version: 1.0.0
+* Version: 1.0.1
 * License: Apache 2
-* Author: Alexander F. Rødseth
