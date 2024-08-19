@@ -18,8 +18,9 @@ import (
 
 func main() {
     const (
-        textModel       = "gemini-1.5-flash-001"
-        multiModalModel = "gemini-1.0-pro-vision-001"
+        textModel       = "gemini-1.5-flash"
+        // textModel       = "gemini-1.5-pro"
+        multiModalModel = "gemini-1.0-pro-vision"
     )
 
     var (
