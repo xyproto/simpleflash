@@ -7,8 +7,8 @@ cloud.google.com/go/civil
 cloud.google.com/go/aiplatform/apiv1beta1
 cloud.google.com/go/aiplatform/apiv1beta1/aiplatformpb
 cloud.google.com/go/aiplatform/internal
-# cloud.google.com/go/auth v0.8.1
-## explicit; go 1.20
+# cloud.google.com/go/auth v0.9.0
+## explicit; go 1.21
 cloud.google.com/go/auth
 cloud.google.com/go/auth/credentials
 cloud.google.com/go/auth/credentials/internal/externalaccount
