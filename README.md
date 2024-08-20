@@ -2,6 +2,10 @@
 
 A simple way to use Gemini and the gemini-1.5-flash model (or other Gemini-models).
 
+## DEPRECATED
+
+Please use https://github.com/xyproto/simplegemini instead. It has a pretty similar API, but with some improvements and additions.
+
 Example use:
 
 ```go
